@@ -346,13 +346,11 @@
             const dropZone = document.getElementById('dropZone');
             const fileInput = document.getElementById('fileInput');
 
-            // Abrir explorador al presionar el área
             dropZone.addEventListener('click', (e) => {
                 if (e.target.closest('button')) return;
                 fileInput.click();
             });
 
-            // Drag Events
             ['dragenter', 'dragover'].forEach(eventName => {
                 dropZone.addEventListener(eventName, (e) => {
                     e.preventDefault();
@@ -369,7 +367,6 @@
                 }, false);
             });
 
-            // Handle Drop
             dropZone.addEventListener('drop', (e) => {
                 const dt = e.dataTransfer;
                 const files = dt.files;
@@ -378,7 +375,6 @@
                 }
             });
 
-            // Evento Pegar (Ctrl + V)
             document.addEventListener('paste', (e) => {
                 const items = (e.clipboardData || e.originalEvent.clipboardData).items;
                 for (let index = 0; index < items.length; index++) {
@@ -393,7 +389,6 @@
             });
         }
 
-        // Manejar selección por Input File
         function handleFileSelect(e) {
             const files = e.target.files;
             if (files && files.length > 0) {
@@ -401,7 +396,6 @@
             }
         }
 
-        // Procesar archivo de imagen
         function processFile(file, customName = null) {
             if (!file.type.startsWith('image/')) {
                 showToast('Archivo no válido', 'Por favor selecciona o pega un archivo de imagen válido (JPG, PNG, WEBP, GIF).', 'error');
@@ -433,7 +427,6 @@
             reader.readAsDataURL(file);
         }
 
-        // Remover imagen seleccionada
         function removeImage(e) {
             if (e) e.stopPropagation();
             selectedImageFile = null;
@@ -447,14 +440,12 @@
             defaultContent.classList.remove('hidden');
         }
 
-        // Resetear Formulario
         function resetForm() {
             document.getElementById('helpdeskForm').reset();
             removeImage();
             showToast('Formulario Limpiado', 'Todos los campos han sido borrados.', 'info');
         }
 
-        // Generar Código de Caso basado en Fecha y Hora
         function generateCaseNumber() {
             const now = new Date();
             const year = now.getFullYear();
@@ -467,11 +458,197 @@
             return `TKT-${year}${month}${day}-${hours}${minutes}${seconds}`;
         }
 
+        // --- FUNCIÓN PARA GENERAR Y ABRIR EL PDF PROFESIONAL EN UN NUEVO TAB (_blank) ---
+        function generatePDFReport(ticketData) {
+            const printWindow = window.open('', '_blank');
+            
+            const htmlContent = `
+                <!DOCTYPE html>
+                <html lang="es">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Comprobante de Ticket - ${ticketData.numeroCaso}</title>
+                    <style>
+                        body {
+                            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                            color: #1e293b;
+                            margin: 0;
+                            padding: 20px;
+                            background-color: #ffffff;
+                            font-size: 13px;
+                        }
+                        .header {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            border-bottom: 2px solid #2563eb;
+                            padding-bottom: 15px;
+                            margin-bottom: 20px;
+                        }
+                        .brand-title {
+                            font-size: 20px;
+                            font-weight: bold;
+                            color: #1e3a8a;
+                            margin: 0;
+                        }
+                        .brand-subtitle {
+                            font-size: 11px;
+                            color: #64748b;
+                            margin: 2px 0 0 0;
+                        }
+                        .ticket-badge {
+                            text-align: right;
+                        }
+                        .ticket-number {
+                            font-size: 16px;
+                            font-weight: bold;
+                            color: #2563eb;
+                            background: #eff6ff;
+                            padding: 5px 12px;
+                            border-radius: 6px;
+                            border: 1px solid #bfdbfe;
+                            display: inline-block;
+                        }
+                        .meta-info {
+                            font-size: 11px;
+                            color: #64748b;
+                            margin-top: 5px;
+                        }
+                        .section-title {
+                            font-size: 12px;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                            color: #1e3a8a;
+                            background: #f1f5f9;
+                            padding: 6px 10px;
+                            border-left: 4px solid #2563eb;
+                            margin: 15px 0 10px 0;
+                            font-weight: bold;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-bottom: 15px;
+                        }
+                        table td {
+                            padding: 6px 8px;
+                            vertical-align: top;
+                        }
+                        .label {
+                            font-weight: bold;
+                            color: #475569;
+                            width: 25%;
+                        }
+                        .value {
+                            color: #0f172a;
+                        }
+                        .description-box {
+                            background: #f8fafc;
+                            border: 1px solid #e2e8f0;
+                            border-radius: 6px;
+                            padding: 12px;
+                            min-height: 60px;
+                            white-space: pre-wrap;
+                            color: #334155;
+                            margin-top: 5px;
+                        }
+                        .footer-signatures {
+                            margin-top: 50px;
+                            display: flex;
+                            justify-content: space-between;
+                        }
+                        .signature-box {
+                            width: 45%;
+                            text-align: center;
+                            border-top: 1px solid #94a3b8;
+                            padding-top: 8px;
+                            margin-top: 40px;
+                        }
+                        .signature-title {
+                            font-weight: bold;
+                            font-size: 11px;
+                            color: #475569;
+                        }
+                        @media print {
+                            body { padding: 0; }
+                            button { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div>
+                            <h1 class="brand-title">proyectosGL</h1>
+                            <p class="brand-subtitle">Centro de Asistencia Técnica Integrado & Helpdesk</p>
+                        </div>
+                        <div class="ticket-badge">
+                            <div class="ticket-number">${ticketData.numeroCaso}</div>
+                            <div class="meta-info">Fecha: ${ticketData.fecha} | Hora: ${ticketData.hora}</div>
+                            <div class="meta-info">Hoja N°: 1 de 1</div>
+                        </div>
+                    </div>
+
+                    <div class="section-title">Datos del Solicitante</div>
+                    <table>
+                        <tr>
+                            <td class="label">Nombre y Apellido:</td>
+                            <td class="value">${ticketData.nombre} ${ticketData.apellido}</td>
+                            <td class="label">Cédula / ID:</td>
+                            <td class="value">${ticketData.cedula}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Correo Electrónico:</td>
+                            <td class="value">${ticketData.gmail}</td>
+                            <td class="label">Teléfono:</td>
+                            <td class="value">${ticketData.telefono}</td>
+                        </tr>
+                    </table>
+
+                    <div class="section-title">Información Empresarial</div>
+                    <table>
+                        <tr>
+                            <td class="label">Empresa / Sede:</td>
+                            <td class="value">${ticketData.empresa}</td>
+                            <td class="label">RIF:</td>
+                            <td class="value">${ticketData.rif}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Dirección Física:</td>
+                            <td class="value" colspan="3">${ticketData.direccion}</td>
+                        </tr>
+                    </table>
+
+                    <div class="section-title">Detalle de la Incidencia / Requerimiento</div>
+                    <div class="description-box">${ticketData.explicacion}</div>
+
+                    <div class="footer-signatures">
+                        <div class="signature-box">
+                            <div class="signature-title">Firma y Sello del Solicitante</div>
+                            <div style="font-size: 10px; color: #64748b; margin-top: 4px;">${ticketData.empresa}</div>
+                        </div>
+                        <div class="signature-box">
+                            <div class="signature-title">Emitido por / Soporte Técnico</div>
+                            <div style="font-size: 10px; color: #64748b; margin-top: 4px;">proyectosGL</div>
+                        </div>
+                    </div>
+
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                        }
+                    <\/script>
+                </body>
+                </html>
+            `;
+
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
+        }
+
         // Enviar Ticket
         async function submitTicket(e) {
             e.preventDefault();
 
-            // Validar que se haya seleccionado o pegado una imagen (al ser requerida)
             if (!selectedImageFile) {
                 showToast('Imagen requerida', 'Por favor adjunta una captura o imagen del error antes de enviar.', 'error');
                 return;
@@ -481,7 +658,6 @@
             const btnText = document.getElementById('btnText');
             const btnSpinner = document.getElementById('btnSpinner');
 
-            // Obtener valores de los campos
             const nombre = document.getElementById('nombre').value.trim();
             const apellido = document.getElementById('apellido').value.trim();
             const cedula = document.getElementById('cedula').value.trim();
@@ -492,15 +668,15 @@
             const direccion = document.getElementById('direccion').value.trim();
             const explicacion = document.getElementById('explicacion').value.trim();
 
-            // Generar número de caso
             const numeroCaso = generateCaseNumber();
+            const now = new Date();
+            const fecha = now.toLocaleDateString();
+            const hora = now.toLocaleTimeString();
 
-            // Deshabilitar botón y activar loader
             submitBtn.disabled = true;
             btnText.textContent = 'Enviando...';
             btnSpinner.classList.remove('hidden');
 
-            // Formatear texto en HTML para Telegram
             const formattedMessage = 
 `🚀 <b>NUEVO TICKET DE SOPORTE - proyectosGL</b>
 
@@ -531,7 +707,24 @@ ${escapeHtml(explicacion)}`;
                 const data = await response.json();
 
                 if (data.ok) {
-                    showToast('Ticket Enviado con Éxito', `Tu caso ${numeroCaso} ha sido recibido. Te contactaremos pronto.`, 'success');
+                    showToast('Ticket Enviado con Éxito', `Tu caso ${numeroCaso} ha sido recibido. Generando PDF...`, 'success');
+                    
+                    // --- Generar y abrir el PDF profesional automáticamente ---
+                    generatePDFReport({
+                        numeroCaso,
+                        nombre,
+                        apellido,
+                        cedula,
+                        gmail,
+                        telefono,
+                        empresa,
+                        rif,
+                        direccion,
+                        explicacion,
+                        fecha,
+                        hora
+                    });
+
                     resetForm();
                 } else {
                     throw new Error(data.description || 'Error al enviar la imagen a Telegram');
@@ -541,14 +734,12 @@ ${escapeHtml(explicacion)}`;
                 console.error('Error enviando ticket:', error);
                 showToast('Error al Enviar', `Ocurrió un problema enviando el ticket: ${error.message}`, 'error');
             } finally {
-                // Restaurar estado del botón
                 submitBtn.disabled = false;
-                btnText.textContent = 'Enviar Ticket a Telegram';
+                btnText.textContent = 'Enviar Ticket';
                 btnSpinner.classList.add('hidden');
             }
         }
 
-        // Función Auxiliar para Escapar HTML en Telegram
         function escapeHtml(text) {
             return text
                 .replace(/&/g, "&amp;")
@@ -556,7 +747,6 @@ ${escapeHtml(explicacion)}`;
                 .replace(/>/g, "&gt;");
         }
 
-        // Sistema de Toast Notifications
         function showToast(title, message, type = 'info') {
             const toast = document.getElementById('toast');
             const toastTitle = document.getElementById('toastTitle');
